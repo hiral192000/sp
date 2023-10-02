@@ -1,0 +1,95 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var \Magento\Newsletter\Block\Subscribe $block */
+?>
+<div class="block newsletter">
+    <h3><?= $block->escapeHtml(__('Newsletter')) ?></h3>
+    <div class="content">
+        <form class="form subscribe"  novalidate   action="<?= $block->escapeUrl($block->getFormActionUrl()) ?>"   method="post"  data-mage-init='{"validation": {"errorClass": "mage-error"}}'   id="newsletter-validate-detail">
+            <div class="field newsletter">
+                <div class="control">
+                    <label for="newsletter">
+                        <span class="label">
+                            <?= $block->escapeHtml(__('Sign Up for Our Newsletter:')) ?>
+                        </span>
+                        <input name="email" type="email" id="newsletter"
+                               placeholder="<?= $block->escapeHtml(__('Email address')) ?>"
+                               data-mage-init='{"mage/trim-input":{}}'
+                               data-validate="{required:true, 'validate-email':true}"
+                        />
+                    </label>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="action subscribe primary"  title="<?= $block->escapeHtmlAttr(__('Subscribe')) ?>"  type="submit"   aria-label="Subscribe">
+                    <span><?= $block->escapeHtml(__('Subscribe email')) ?></span>
+                </button>
+            </div>
+            <div id="loading-message" style="display:none;padding-top:10px;color: white;font-size: 13px;font-weight: 500;">&nbsp;</div>
+            <div class="scg-msg">
+                <div class="messages">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Magento_Customer/js/block-submit-on-send": {
+                "formId": "newsletter-validate-detail"
+            }
+        }
+    }
+</script>
+<script>
+require(['jquery'],function($){
+    var form = $('#newsletter-validate-detail');
+    form.submit(function(e) {
+        if(form.validation('isValid')){
+            var email = $("#newsletter-validate-detail #newsletter").val();
+            var url = form.attr('action');
+            var loadingMessage = $('#loading-message');
+              
+            e.preventDefault();
+            try{
+                loadingMessage.html('Submitting...').show();
+                $('.scg-msg > messages').html();
+
+                $.ajax({
+                    url: url,
+                    dataType: 'json',
+                    type: 'POST',
+                    data: {email: email},
+                    success: function (data){
+                        if(data.status != "ERROR"){
+                            $("#newsletter-validate-detail #newsletter").val('');                           
+                            loadingMessage.css('color','green');
+                        }else{                         
+                            loadingMessage.css('color','red');
+                        }                            
+                        loadingMessage.html(data.msg);
+                        setTimeout(function () {
+                            loadingMessage.hide();
+                            $("#newsletter-validate-detail .action.subscribe.primary").removeAttr('disabled');
+                            $("#newsletter-validate-detail .action.subscribe.primary").prop("disabled", false);
+                        }, 5000)
+                    },
+                });
+            } catch (e){
+                loadingMessage.css('color','red');
+                loadingMessage.html('Something went worng!');
+                setTimeout(function () {
+                    loadingMessage.hide();
+                    $("#newsletter-validate-detail .action.subscribe.primary").removeAttr('disabled');
+                    $("#newsletter-validate-detail .action.subscribe.primary").prop("disabled", false);
+                }, 5000)
+            }
+        }
+    });
+})
+</script>
